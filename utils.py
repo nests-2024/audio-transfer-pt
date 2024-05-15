@@ -1,17 +1,17 @@
 import librosa
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
 
-N_FFT = 2048
+N_FFT = 1024
 S_RATE = 22050
 MAX_LEN = 16
 
 def read_audio_spectrum(filename, duration=MAX_LEN, n_fft=N_FFT, sr=S_RATE):
-    x, sr = librosa.load(filename, duration=duration, sr=sr)
+    x, sr = librosa.load(filename, sr=sr)
     S = librosa.stft(x, n_fft=n_fft)
     p = np.angle(S)
-    S = np.log1p(np.abs(S))
+    last_sample = int(duration * sr / (n_fft / 4))
+    S = np.log1p(np.abs(S[:, :last_sample]))
     return S, sr, p
 
 
