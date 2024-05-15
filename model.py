@@ -1,3 +1,5 @@
+import numpy as np
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -65,12 +67,13 @@ class RandomCNN(nn.Module):
         return out
 
 
-def get_style_model_and_losses(cnn, style, content):
+def get_style_model_and_losses(cnn, content, style):
     content_losses = []
     style_losses = []
 
     #model = nn.Sequential(normalization) #???
     model = nn.Sequential()
+    model.eval()
 
     i = 0
     for layer in cnn.children():
@@ -102,22 +105,35 @@ def get_style_model_and_losses(cnn, style, content):
             model.add_module("style_loss_{}".format(i), style_loss)
             style_losses.append(style_loss)
 
-    return model, style_losses, content_losses
+
+    return model, content_losses, style_losses
 
 
 def run_transfer(cnn, content_spectrum, style_spectrum,
                  num_steps=300,
-                 style_weight=1e4, content_weight=1):
+                 content_weight=1, style_weight=1e4):
 
     print('Building the style transfer model..')
     print_freq = int(num_steps // 20)
 
+    content_length = content_spectrum.shape[1]
+    style_length = style_spectrum.shape[1]
+
+    if style_length > content_length:
+        style_spectrum = style_spectrum[:, :content_length]
+    else:
+        pad = [(0, 0), (0, content_length - style_length)]
+        style_spectrum = np.pad(style_spectrum, pad_width=pad)
+
     content = torch.from_numpy(content_spectrum)[None, None, :, :].to(device)
     style = torch.from_numpy(style_spectrum)[None, None, :, :].to(device)
 
+    content.requires_grad_(False)
+    style.requires_grad_(False)
+
     result = torch.randn(content.data.size()) * 1e-3
 
-    model, style_losses, content_losses = get_style_model_and_losses(cnn, style, content)
+    model, content_losses, style_losses = get_style_model_and_losses(cnn, content, style)
 
     result.requires_grad_(True)
     model.eval()
@@ -136,28 +152,25 @@ def run_transfer(cnn, content_spectrum, style_spectrum,
 
             optimizer.zero_grad()
             model(result)
-            style_score = 0
             content_score = 0
+            style_score = 0
 
-            for sl in style_losses:
-                style_score += sl.loss
             for cl in content_losses:
                 content_score += cl.loss
+            for sl in style_losses:
+                style_score += sl.loss
 
-            style_score *= style_weight
             content_score *= content_weight
+            style_score *= style_weight
 
-            loss = style_score + content_score
+            loss = content_score + style_score
             loss.backward()
 
             run[0] += 1
             if run[0] % print_freq == 0:
-                print("run {}:".format(run))
-                print('Style Loss : {:.4f} Content Loss: {:.4f}'.format(
-                    style_score.item(), content_score.item()))
-                print()
+                print('{}: Content Loss: {:.4f} Style Loss : {:.4f}'.format(run[0], content_score.item(), style_score.item()))
 
-            return style_score + content_score
+            return content_score + style_score
 
         optimizer.step(closure)
         #closure()
