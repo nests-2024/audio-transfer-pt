@@ -131,7 +131,9 @@ def run_transfer(cnn, content_spectrum, style_spectrum,
     content.requires_grad_(False)
     style.requires_grad_(False)
 
-    result = torch.randn(content.data.size()) * 1e-3
+    result = (torch.randn(content.data.size()) * 1e-3).to(device)
+
+    cnn = cnn.to(device)
 
     model, content_losses, style_losses = get_style_model_and_losses(cnn, content, style)
 
