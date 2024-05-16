@@ -50,10 +50,10 @@ class Normalization(nn.Module):
 
 
 class RandomCNN(nn.Module):
-    def __init__(self, out_channels=32, kernel=(1, 1)):
+    def __init__(self, out_channels=32, kernel=(1, 1), stride=(1, 1)):
         super(RandomCNN, self).__init__()
 
-        self.conv1 = nn.Conv2d(1, out_channels, kernel_size=kernel, bias=False)
+        self.conv1 = nn.Conv2d(1, out_channels, kernel_size=kernel, stride=stride, bias=False)
         self.LeakyReLU = nn.LeakyReLU(0.2)
 
         # Set the conv parameters to constants
