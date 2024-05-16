@@ -9,29 +9,29 @@ def update_inputs(*minputs):
         if ma is not None and mi is None:
             print("render spec for", ma)
             img = np.array([[0]])
-            mouts.append(gr.Audio.update(visible=True))
-            mouts.append(gr.Image.update(visible=True, value=img))
+            mouts.append(gr.Audio(visible=True))
+            mouts.append(gr.Image(visible=True, value=img))
         elif ma is None and mi is not None:
-            mouts.append(gr.Audio.update(visible=True))
-            mouts.append(gr.Image.update(visible=True, value=None))
+            mouts.append(gr.Audio(visible=True))
+            mouts.append(gr.Image(visible=True, value=None))
         else:
-            mouts.append(gr.Audio.update(visible=True))
-            mouts.append(gr.Image.update(visible=True))
+            mouts.append(gr.Audio(visible=True))
+            mouts.append(gr.Image(visible=True))
     return [*mouts]
 
 def clicked(*file_paths):
     print("click")
     for fp in file_paths:
         print(fp)
-    return [gr.Audio.update(visible=True, value=None),
-            gr.Image.update(visible=True, value=None)]
+    return [gr.Audio(visible=True, value=None),
+            gr.Image(visible=True, value=None)]
 
 with gr.Blocks() as demo:
     gr.Markdown("Audio Style Transfer")
     minputs = []
     for i in range(NUM_INPUTS):
         with gr.Row():
-            ma = gr.Audio(source="upload", type="filepath", label="Source", visible=True)
+            ma = gr.Audio(sources=["upload"], type="filepath", label="Source", visible=True)
             mi = gr.Image(visible=True, interactive=False)
             minputs.append(ma)
             minputs.append(mi)
