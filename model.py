@@ -21,19 +21,21 @@ class ContentLoss(nn.Module):
 class StyleLoss(nn.Module):
     @staticmethod
     def gram_matrix(input):
-        #(a, b, c, d) := (batch, num feats, h, w)
-        a, b, c, d = input.size()
-        features = input.view(a * b * c, d)
+        #(N, C, H, W) := (batch, num feats, h, w)
+        N, C, H, W = input.size()
+        features = input.view(N * C * H, W)
         G = torch.mm(features, features.t())
-        return G.div(d)
+        return G
 
     def __init__(self, target_feature):
         super(StyleLoss, self).__init__()
         self.target = StyleLoss.gram_matrix(target_feature).detach()
 
     def forward(self, input):
+        N, C, H, W = input.size()
+        norm_factor = 1.0 / (C * C * H * H * W * W)
         G = StyleLoss.gram_matrix(input)
-        self.loss = F.mse_loss(G, self.target)
+        self.loss = norm_factor * F.mse_loss(G, self.target)
         return input
 
 
@@ -52,18 +54,15 @@ class RandomCNN(nn.Module):
         super(RandomCNN, self).__init__()
 
         self.conv1 = nn.Conv2d(1, out_channels, kernel_size=kernel, bias=False)
-        #self.LeakyReLU = nn.LeakyReLU(0.2)
+        self.LeakyReLU = nn.LeakyReLU(0.2)
 
-        # Set the conv parameters to be constant
+        # Set the conv parameters to constants
         weight = torch.randn(self.conv1.weight.data.shape)
-        # bias = torch.zeros(self.conv1.bias.data.shape)
-
         self.conv1.weight = torch.nn.Parameter(weight, requires_grad=False)
-        # self.conv1.bias = torch.nn.Parameter(bias, requires_grad=False)
 
     def forward(self, x):
         out = self.conv1(x)
-        #out = self.LeakyReLU(out)
+        out = self.LeakyReLU(out)
         return out
 
 
@@ -147,10 +146,6 @@ def run_transfer(cnn, content_spectrum, style_spectrum,
     run = [0]
     while run[0] <= num_steps:
         def closure():
-            # ???
-            #with torch.no_grad():
-            #result.clamp_(0, 1)
-
             optimizer.zero_grad()
             model(result)
             content_score = 0
@@ -176,9 +171,5 @@ def run_transfer(cnn, content_spectrum, style_spectrum,
         optimizer.step(closure)
         #closure()
         #optimizer.step()
-
-    # ???
-    #with torch.no_grad():
-    #result.clamp_(0, 1)
 
     return result
