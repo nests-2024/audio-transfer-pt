@@ -3,14 +3,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 N_FFT = 1024
+HOP_LEN = 256
+WIN_LEN = 1024
 S_RATE = 22050
 MAX_LEN = 16
 
-def read_audio_spectrum(filename, duration=MAX_LEN, n_fft=N_FFT, sr=S_RATE):
+def read_audio_spectrum(filename, duration=MAX_LEN, sr=S_RATE):
     x, sr = librosa.load(filename, sr=sr)
-    S = librosa.stft(x, n_fft=n_fft)
+    S = librosa.stft(x, n_fft=N_FFT, hop_length=HOP_LEN, win_length=WIN_LEN)
     p = np.angle(S)
-    last_sample = int(duration * sr / (n_fft / 4))
+    last_sample = int(duration * sr / HOP_LEN)
     S = np.log1p(np.abs(S[:, :last_sample]))
     return S, sr, p
 
@@ -21,13 +23,13 @@ def plot_spectrum(spectrum):
     plt.show()
 
 
-def spectrum_to_audio(spectrum, p=None, n_fft=N_FFT, rounds=64):
+def spectrum_to_audio(spectrum, p=None, rounds=64):
     if p is None:
         p = 2 * np.pi * np.random.random_sample(spectrum.shape) - np.pi
 
     spectrum = np.expm1(spectrum)
     for i in range(rounds):
         S = spectrum * np.exp(1j * p)
-        wav = librosa.istft(S)
-        p = np.angle(librosa.stft(wav, n_fft=n_fft))
+        wav = librosa.istft(S, hop_length=HOP_LEN, win_length=WIN_LEN)
+        p = np.angle(librosa.stft(wav, n_fft=N_FFT, hop_length=HOP_LEN, win_length=WIN_LEN))
     return wav
