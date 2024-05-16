@@ -73,7 +73,6 @@ def get_style_model_and_losses(cnn, content, style):
 
     #model = nn.Sequential(normalization) #???
     model = nn.Sequential()
-    model.eval()
 
     i = 0
     for layer in cnn.children():
