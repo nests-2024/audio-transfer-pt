@@ -68,7 +68,7 @@ def clicked(*file_paths):
     ]
 
 
-with gr.Blocks() as demo:
+with gr.Blocks(analytics_enabled=False) as demo:
     gr.Markdown(
         '''# Audio Style Transfer
            ### Based on: [[1]](https://arxiv.org/abs/1508.06576), [[2]](https://arxiv.org/abs/1710.11385) and [[3]](https://pytorch.org/tutorials/advanced/neural_style_tutorial.html)
@@ -87,7 +87,6 @@ with gr.Blocks() as demo:
     for ma in minputs[0::2]:
         ma.change(update_inputs, inputs=[*minputs], outputs=[*minputs[1::2]])
 
-    
     result_but = gr.Button(value="Generate")
     with gr.Row():
         with gr.Column():

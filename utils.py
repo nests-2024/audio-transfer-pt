@@ -12,8 +12,9 @@ MAX_LEN = 16
 def read_audio_spectrum(filename, duration=MAX_LEN, sr=S_RATE):
     x, sr = librosa.load(filename, sr=sr)
     S = librosa.stft(x, n_fft=N_FFT, hop_length=HOP_LEN, win_length=WIN_LEN)
-    p = np.angle(S)
     last_sample = int(duration * sr / HOP_LEN)
+
+    p = np.angle(S[:, :last_sample])
     S = np.log1p(np.abs(S[:, :last_sample]))
     return S, sr, p
 
