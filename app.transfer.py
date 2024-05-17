@@ -1,10 +1,8 @@
 import gradio as gr
-import io
-import matplotlib.pyplot as plt
 import numpy as np
 
 from model import RandomCNN, run_transfer
-from utils import read_audio_spectrum, spectrum_to_audio
+from utils import read_audio_spectrum, spectrum_to_audio, spectrum_to_figure
 
 NUM_INPUTS = 2
 
@@ -26,28 +24,12 @@ examples = [
 ]
 
 
-def spec_to_img(spec):
-    fig = plt.figure(figsize=(8, 2.5), dpi=100)
-    ax = fig.add_axes([0, 0, 1, 1], frameon=False, xticks=[], yticks=[])
-    ax.imshow(spec, aspect='auto')
-
-    iw, ih = int(fig.bbox.bounds[2]), int(fig.bbox.bounds[3])
-
-    io_buf = io.BytesIO()
-    fig.savefig(io_buf, format='raw', dpi=100)
-    io_buf.seek(0)
-    img_arr = np.frombuffer(io_buf.getvalue(), dtype=np.uint8).reshape(ih, iw, -1)
-    io_buf.close()
-
-    return img_arr
-
-
 def update_inputs(*minputs):
     mouts = []
     for ma,mi in zip(minputs[0::2], minputs[1::2]):
         if ma is not None:
-            _spectrum, _, _ = read_audio_spectrum(ma)
-            img = spec_to_img(_spectrum.clip(0, 1000))
+            spectrum, _, _ = read_audio_spectrum(ma)
+            img = spectrum_to_figure(spectrum)
             mouts.append(gr.Image(value=img))
         elif ma is None and mi is not None:
             mouts.append(gr.Image(value=None))
@@ -72,7 +54,7 @@ def clicked(*file_paths):
     result = run_transfer(mcnn, content_spectrum, style_spectrum, num_steps=1500, content_weight=1e-1, style_weight=1e10)
 
     result_spectrum = result.cpu().data.numpy().squeeze()
-    result_img = spec_to_img(result_spectrum.clip(0, 1000))
+    result_img = spectrum_to_figure(result_spectrum)
     result_wav = spectrum_to_audio(result_spectrum, p=content_p, rounds=150)
 
     content_slug = content_path.split("/")[-1].split(" ")[0].split(".")[0][:32].split("-0-")[0]

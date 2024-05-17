@@ -1,3 +1,4 @@
+import io
 import librosa
 import matplotlib.pyplot as plt
 import numpy as np
@@ -33,3 +34,18 @@ def spectrum_to_audio(spectrum, p=None, rounds=64):
         wav = librosa.istft(S, hop_length=HOP_LEN, win_length=WIN_LEN)
         p = np.angle(librosa.stft(wav, n_fft=N_FFT, hop_length=HOP_LEN, win_length=WIN_LEN))
     return wav
+
+def spectrum_to_figure(spectrum):
+    fig = plt.figure(figsize=(8, 2.5), dpi=100)
+    ax = fig.add_axes([0, 0, 1, 1], frameon=False, xticks=[], yticks=[])
+    ax.imshow(spectrum.clip(0, 1e3), aspect='auto')
+
+    iw, ih = int(fig.bbox.bounds[2]), int(fig.bbox.bounds[3])
+
+    io_buf = io.BytesIO()
+    fig.savefig(io_buf, format='raw', dpi=100)
+    io_buf.seek(0)
+    fig_arr = np.frombuffer(io_buf.getvalue(), dtype=np.uint8).reshape(ih, iw, -1)
+    io_buf.close()
+
+    return fig_arr
