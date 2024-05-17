@@ -43,17 +43,18 @@ def spec_to_img(spec):
 def update_inputs(*minputs):
     mouts = []
     for ma,mi in zip(minputs[0::2], minputs[1::2]):
-        if ma is not None and mi is None:
+        if ma is not None:
             _spectrum, _, _ = read_audio_spectrum(ma)
-            img = spec_to_img(_spectrum)
-            mouts.append(gr.Audio(visible=True))
-            mouts.append(gr.Image(visible=True, value=img))
+            img = spec_to_img(_spectrum.clip(0, 1000))
+            mouts.append(gr.Audio())
+            mouts.append(gr.Image(value=img))
         elif ma is None and mi is not None:
-            mouts.append(gr.Audio(visible=True))
-            mouts.append(gr.Image(visible=True, value=None))
+            mouts.append(gr.Audio())
+            mouts.append(gr.Image(value=None))
         else:
-            mouts.append(gr.Audio(visible=True))
-            mouts.append(gr.Image(visible=True))
+            mouts.append(gr.Audio())
+            mouts.append(gr.Image())
+
     return [*mouts]
 
 
@@ -77,7 +78,7 @@ def clicked(*file_paths):
     result = run_transfer(mcnn, content_spectrum, style_spectrum, num_steps=1500, content_weight=1e-1, style_weight=1e10)
 
     result_spectrum = result.cpu().data.numpy().squeeze()
-    result_img = spec_to_img(result_spectrum)
+    result_img = spec_to_img(result_spectrum.clip(0, 1000))
     result_wav = spectrum_to_audio(result_spectrum, p=content_p, rounds=150)
 
     content_slug = content_path.split("/")[-1].split(" ")[0].split(".")[0][:32].split("-0-")[0]
