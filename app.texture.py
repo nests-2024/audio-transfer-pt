@@ -58,8 +58,9 @@ def clicked(seed=-1, *file_paths):
 
     kx, ky = 17, 5
     content_weight = 0 if seed == -1 else 1e-1
+    style_weight = 1e12 if seed == -1 else 1e10
     mcnn = RandomCNN(out_channels=384, kernel=(kx, ky), stride=(kx - 2, ky - 2))
-    result = run_transfer(mcnn, content_spectrum, style_spectrum, num_steps=1500, content_weight=content_weight, style_weight=1e10)
+    result = run_transfer(mcnn, content_spectrum, style_spectrum, num_steps=1500, content_weight=content_weight, style_weight=style_weight)
 
     result_spectrum = result.cpu().data.numpy().squeeze()
     result_img = spectrum_to_figure(result_spectrum)
