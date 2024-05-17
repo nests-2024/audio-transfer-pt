@@ -27,16 +27,18 @@ examples = [
 
 
 def spec_to_img(spec):
-    fig = plt.figure(figsize=(8,2), dpi=80)
+    fig = plt.figure(figsize=(8, 2.5), dpi=100)
     ax = fig.add_axes([0, 0, 1, 1], frameon=False, xticks=[], yticks=[])
-    ax.imshow(spec[:, :], aspect='auto')
+    ax.imshow(spec, aspect='auto')
+
+    iw, ih = int(fig.bbox.bounds[2]), int(fig.bbox.bounds[3])
 
     io_buf = io.BytesIO()
-    fig.savefig(io_buf, format='raw', dpi=80)
+    fig.savefig(io_buf, format='raw', dpi=100)
     io_buf.seek(0)
-    img_arr = np.reshape(np.frombuffer(io_buf.getvalue(), dtype=np.uint8),
-                         newshape=(int(fig.bbox.bounds[3]), int(fig.bbox.bounds[2]), -1))
+    img_arr = np.frombuffer(io_buf.getvalue(), dtype=np.uint8).reshape(ih, iw, -1)
     io_buf.close()
+
     return img_arr
 
 
@@ -46,26 +48,18 @@ def update_inputs(*minputs):
         if ma is not None:
             _spectrum, _, _ = read_audio_spectrum(ma)
             img = spec_to_img(_spectrum.clip(0, 1000))
-            mouts.append(gr.Audio())
             mouts.append(gr.Image(value=img))
         elif ma is None and mi is not None:
-            mouts.append(gr.Audio())
             mouts.append(gr.Image(value=None))
         else:
-            mouts.append(gr.Audio())
             mouts.append(gr.Image())
 
     return [*mouts]
 
 
-def pop_examples(*inps):
-    print(inps)
-    params = [inps[0], None, inps[1]]
-    return clicked(*params)
-
 def clicked(*file_paths):
     content_path = file_paths[0]
-    style_path = file_paths[2]
+    style_path = file_paths[1]
 
     if content_path is None or style_path is None:
         return [gr.Audio(), gr.Image(), gr.Textbox()]
@@ -97,13 +91,14 @@ with gr.Blocks() as demo:
     minputs = []
     for i in range(NUM_INPUTS):
         with gr.Row():
-            ma = gr.Audio(sources=["upload"], type="filepath", label="Source", visible=True)
+            mlabel = "Content" if len(minputs) < 1 else "Style"
+            ma = gr.Audio(sources=["upload"], type="filepath", label=mlabel, visible=True)
             mi = gr.Image(visible=True, interactive=False, height=200)
             minputs.append(ma)
             minputs.append(mi)
 
     for ma in minputs[0::2]:
-        ma.change(update_inputs, inputs=[*minputs], outputs=[*minputs])
+        ma.change(update_inputs, inputs=[*minputs], outputs=[*minputs[1::2]])
 
     
     result_but = gr.Button(value="Generate")
@@ -113,17 +108,15 @@ with gr.Blocks() as demo:
             result_name = gr.Textbox(label="name", visible=False)
         result_img = gr.Image(label="Result Spectogram", interactive=False, visible=False, height=200)
     
-    result_but.click(clicked, inputs=[*minputs], outputs=[result_wav, result_img, result_name])
+    result_but.click(clicked, inputs=[*minputs[0::2]], outputs=[result_wav, result_img, result_name])
 
-    gr.Examples(examples=examples, fn=pop_examples,
+    gr.Examples(examples=examples, fn=clicked,
                 inputs=[*minputs[0::2]],
                 outputs=[result_wav, result_img, result_name],
                 cache_examples=True)
 
 # allow_flagging="never",
 # analytics_enabled=None
-
-# demo.launch(show_api=False, server_name="0.0.0.0")
 
 if __name__ == "__main__":
    demo.launch(show_api=False, server_name="0.0.0.0", server_port=7862)
