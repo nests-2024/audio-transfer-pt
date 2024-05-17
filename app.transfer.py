@@ -69,7 +69,12 @@ def clicked(*file_paths):
 
 
 with gr.Blocks() as demo:
-    gr.Markdown("# Audio Style Transfer\n### Following [this paper](https://arxiv.org/abs/1508.06576)\n### Using PyTorch with GPU support")
+    gr.Markdown(
+        '''# Audio Style Transfer
+           ### Based on: [[1]](https://arxiv.org/abs/1508.06576), [[2]](https://arxiv.org/abs/1710.11385) and [[3]](https://pytorch.org/tutorials/advanced/neural_style_tutorial.html)
+           ### Using PyTorch with GPU support
+        '''
+    )
     minputs = []
     for i in range(NUM_INPUTS):
         with gr.Row():
