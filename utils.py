@@ -56,7 +56,10 @@ def spectrum_to_figure(spectrum):
 #TODO: time domain modulation
 
 
-def modulate_spectrum(carrier_s, content_s, carrier_p, carrier_sr=S_RATE):
+def modulate_spectrum(carrier_filename, content_filename):
+    carrier_s, carrier_sr, carrier_p = read_audio_spectrum(carrier_filename)
+    content_s, content_sr, content_p = read_audio_spectrum(content_filename)
+
     carrier_shape = carrier_s.shape
     carrier_avg = carrier_s.mean(axis=0)
     carrier_avg_s = np.expand_dims(carrier_avg, 0).repeat(carrier_shape[0], axis=0).clip(0, 1000)
