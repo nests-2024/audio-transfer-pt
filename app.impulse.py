@@ -9,11 +9,15 @@ from utils import audio_to_spectrum, read_audio_spectrum, spectrum_to_audio, spe
 
 NUM_INPUTS = 2
 
-STRATEGY = ["Transfer", "Modulation"]
+STRATEGY = ["Texture", "Transfer", "Modulation"]
 
 examples = [
-    ["wavs/birds/BR_ALAGOAS_FOLIAGE/BR_AL_XC181063-PHINOV36_0101_LIMPO.mp3"],
-    ["wavs/birds/MEX_ALTAMIRA_ORIOLE/MEX_Altamira_Oriole-ACelisM_01.mp3"],
+    [0, "Texture", "wavs/birds/BR_ALAGOAS_FOLIAGE/BR_AL_XC181063-PHINOV36_0101_LIMPO.mp3"],
+    [0, "Transfer", "wavs/birds/BR_ALAGOAS_FOLIAGE/BR_AL_XC181063-PHINOV36_0101_LIMPO.mp3"],
+    [0, "Modulation", "wavs/birds/BR_ALAGOAS_FOLIAGE/BR_AL_XC181063-PHINOV36_0101_LIMPO.mp3"],
+    [0, "Texture", "wavs/birds/MEX_ALTAMIRA_ORIOLE/MEX_Altamira_Oriole-ACelisM_01.mp3"],
+    [0, "Transfer", "wavs/birds/MEX_ALTAMIRA_ORIOLE/MEX_Altamira_Oriole-ACelisM_01.mp3"],
+    [0, "Modulation", "wavs/birds/MEX_ALTAMIRA_ORIOLE/MEX_Altamira_Oriole-ACelisM_01.mp3"],
 ]
 
 m_impulse = ImpulseSP()
@@ -41,7 +45,7 @@ def clear_outputs():
     ]
 
 
-def transfer_spectrum(content_s, style_s, with_avg=True):
+def transfer_spectrum(content_s, style_s, just_style=False, with_avg=True):
     if with_avg:
         kx, ky = 17, 17
         content_w, style_w = 1, 1e11
@@ -49,6 +53,10 @@ def transfer_spectrum(content_s, style_s, with_avg=True):
     else:
         kx, ky = 17, 17
         content_w, style_w = 1, 1e14
+
+    if just_style:
+        kx, ky = 17, 5
+        content_w, style_w = 0, 1e12
 
     mcnn = RandomCNN(out_channels=392, kernel=(kx, ky), stride=(kx - 2, ky - 2))
     result = run_transfer(mcnn, content_s, style_s, num_steps=1000, content_weight=content_w, style_weight=style_w)
@@ -86,6 +94,8 @@ def clicked(seed, strategy, *file_paths):
             style_sr = m_style_sr
 
     if strategy == STRATEGY[0]:
+        result_spectrum = transfer_spectrum(content_spectrum, style_spectrum, just_style=True)
+    elif strategy == STRATEGY[1]:
         result_spectrum = transfer_spectrum(content_spectrum, style_spectrum)
     else:
         result_spectrum = modulate_spectrum(content_spectrum, style_spectrum)
@@ -133,13 +143,10 @@ with gr.Blocks(analytics_enabled=False) as demo:
     result_but.click(clicked, inputs=[seed_slide, type_radio, *minputs[0::2]], outputs=[result_wav, result_img, result_name])
 
 
-    '''
     gr.Examples(examples=examples, fn=clicked,
-                inputs=[*minputs[0::2]],
+                inputs=[seed_slide, type_radio, *minputs[0::2]],
                 outputs=[result_wav, result_img, result_name],
                 cache_examples=True)
-    '''
-
 
 if __name__ == "__main__":
    demo.launch(show_api=False, server_name="0.0.0.0", server_port=7863)
