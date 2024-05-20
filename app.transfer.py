@@ -46,12 +46,12 @@ def clicked(*file_paths):
     if content_path is None or style_path is None:
         return [gr.Audio(), gr.Image(), gr.Textbox()]
 
-    content_spectrum, content_sr, content_p = read_audio_spectrum(content_path)
-    style_spectrum, style_sr, style_p = read_audio_spectrum(style_path)
+    content_s, content_p, content_sr= read_audio_spectrum(content_path)
+    style_s, style_p, style_sr = read_audio_spectrum(style_path)
 
     kx, ky = 17, 5
     mcnn = RandomCNN(out_channels=384, kernel=(kx, ky), stride=(kx - 2, ky - 2))
-    result = run_transfer(mcnn, content_spectrum, style_spectrum, num_steps=1500, content_weight=1e-1, style_weight=1e10)
+    result = run_transfer(mcnn, content_s, style_s, num_steps=1500, content_weight=1, style_weight=1e11)
 
     result_spectrum = result.cpu().data.numpy().squeeze()
     result_img = spectrum_to_figure(result_spectrum)
@@ -100,9 +100,6 @@ with gr.Blocks(analytics_enabled=False) as demo:
                 inputs=[*minputs[0::2]],
                 outputs=[result_wav, result_img, result_name],
                 cache_examples=True)
-
-# allow_flagging="never",
-# analytics_enabled=None
 
 if __name__ == "__main__":
    demo.launch(show_api=False, server_name="0.0.0.0", server_port=7862)
