@@ -10,9 +10,9 @@ S_RATE = 22050
 MAX_LEN = 16
 
 
-def audio_to_spectrum(x, sr, duration=MAX_LEN):
-    S = librosa.stft(x, n_fft=N_FFT, hop_length=HOP_LEN, win_length=WIN_LEN)
-    last_sample = int(duration * sr / HOP_LEN)
+def audio_to_spectrum(x, sr, duration=MAX_LEN, hop_length=HOP_LEN, win_length=WIN_LEN):
+    S = librosa.stft(x, n_fft=N_FFT, hop_length=hop_length, win_length=win_length)
+    last_sample = int(duration * sr / hop_length)
     p = np.angle(S[:, :last_sample])
     s = np.log1p(np.abs(S[:, :last_sample]))
     return s, p
