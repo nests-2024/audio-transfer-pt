@@ -15,7 +15,8 @@ def audio_to_spectrum(x, sr, duration=MAX_LEN, hop_length=HOP_LEN, win_length=WI
     last_sample = int(duration * sr / hop_length)
     p = np.angle(S[:, :last_sample])
     s = np.log1p(np.abs(S[:, :last_sample]))
-    return s, p
+    s01 = (s - s.min()) / s.ptp()
+    return s01, p
 
 
 def read_audio_spectrum(filename, target_sr=S_RATE, duration=MAX_LEN):
