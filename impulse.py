@@ -23,7 +23,7 @@ class Impulse:
 
     def get_impulse(self, seed, target_sr=S_RATE):
         words = self.phrases[seed % len(self.phrases)]
-        txt = " ''' ".join(words[:5])
+        txt = " ''' ".join(words[:7])
         inputs = self.tokenizer(txt, return_tensors="pt").to("cpu")
         with torch.no_grad():
             output = self.model(**inputs).waveform

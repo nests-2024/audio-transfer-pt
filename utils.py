@@ -7,7 +7,7 @@ N_FFT = 1024
 HOP_LEN = 256
 WIN_LEN = 1024
 S_RATE = 22050
-MAX_LEN = 16
+MAX_LEN = 30
 
 
 def audio_to_spectrum(x, sr, duration=MAX_LEN, hop_length=HOP_LEN, win_length=WIN_LEN):
