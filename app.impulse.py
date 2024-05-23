@@ -141,7 +141,7 @@ with gr.Blocks(analytics_enabled=False) as demo:
 
     with gr.Row():
         with gr.Column():
-            result_wav = gr.Audio(label="Result", type="numpy", interactive=False, visible=True)
+            result_wav = gr.Audio(label="Result", type="numpy", interactive=True, visible=True)
             result_name = gr.Textbox(label="name", visible=False)
         result_img = gr.Image(label="Result Spectogram", interactive=False, visible=False, height=200)
 
