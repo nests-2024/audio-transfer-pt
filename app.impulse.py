@@ -7,7 +7,7 @@ from model import RandomCNN, run_transfer
 from impulse import ImpulsePT, ImpulseSP, average_spectrum_frequencies, modulate_spectrum
 from utils import audio_to_spectrum, read_audio_spectrum, spectrum_to_audio, spectrum_to_figure
 
-NUM_INPUTS = 2
+NUM_INPUTS = 4
 
 STRATEGY = ["Texture", "Transfer", "Modulation"]
 
