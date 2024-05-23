@@ -49,9 +49,9 @@ def clicked(*file_paths):
     content_s, content_p, content_sr= read_audio_spectrum(content_path)
     style_s, style_p, style_sr = read_audio_spectrum(style_path)
 
-    kx, ky = 17, 5
-    mcnn = RandomCNN(out_channels=384, kernel=(kx, ky), stride=(kx - 2, ky - 2))
-    result = run_transfer(mcnn, content_s, style_s, num_steps=1500, content_weight=1, style_weight=1e11)
+    kx, ky = 21, 21
+    mcnn = RandomCNN(out_channels=768, kernel=(kx, ky), stride=(kx - 2, ky - 2))
+    result = run_transfer(mcnn, content_s, style_s, num_steps=1000, content_weight=1, style_weight=1e11)
 
     result_spectrum = result.cpu().data.numpy().squeeze()
     result_img = spectrum_to_figure(result_spectrum)

@@ -47,19 +47,25 @@ def clear_outputs():
 
 def transfer_spectrum(content_s, style_s, just_style=False, with_avg=True):
     if with_avg:
-        kx, ky = 17, 17
-        content_w, style_w = 1, 1e11
+        kx, ky = 31, 31
+        content_w, style_w = 1, 1e10
         content_s = average_spectrum_frequencies(content_s) * 1e-4
+        out_channels = 1024
+        num_steps = 500
     else:
         kx, ky = 17, 17
         content_w, style_w = 1, 1e14
+        out_channels = 768
+        num_steps = 1000
 
     if just_style:
-        kx, ky = 17, 5
+        kx, ky = 31, 31
         content_w, style_w = 0, 1e12
+        out_channels = 1024
+        num_steps = 1000
 
-    mcnn = RandomCNN(out_channels=392, kernel=(kx, ky), stride=(kx - 2, ky - 2))
-    result = run_transfer(mcnn, content_s, style_s, num_steps=1000, content_weight=content_w, style_weight=style_w)
+    mcnn = RandomCNN(out_channels=out_channels, kernel=(kx, ky), stride=(kx - 2, ky - 2))
+    result = run_transfer(mcnn, content_s, style_s, num_steps=num_steps, content_weight=content_w, style_weight=style_w)
 
     result_spectrum = result.cpu().data.numpy().squeeze().clip(0, 1e3)
     return result_spectrum
