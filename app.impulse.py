@@ -20,7 +20,7 @@ examples = [
     [0, "Modulation", "wavs/birds/MEX_ALTAMIRA_ORIOLE/MEX_Altamira_Oriole-ACelisM_01.mp3"],
 ]
 
-m_impulse = ImpulseSP()
+m_impulse = ImpulsePT()
 
 def update_inputs(*minputs):
     mouts = []
@@ -127,8 +127,8 @@ with gr.Blocks(analytics_enabled=False) as demo:
     minputs = []
     for i in range(NUM_INPUTS):
         with gr.Row():
-            ma = gr.Audio(sources=["upload"], type="filepath", label=f"Style-{i}", visible=(i==0))
-            mi = gr.Image(label=f"STFT-{i}", visible=(i==0), interactive=False, height=200)
+            ma = gr.Audio(sources=["upload"], type="filepath", label=f"Style-{i}", visible=True)
+            mi = gr.Image(label=f"STFT-{i}", visible=True, interactive=False, height=200)
             minputs.append(ma)
             minputs.append(mi)
 
@@ -147,7 +147,6 @@ with gr.Blocks(analytics_enabled=False) as demo:
 
     type_radio.change(clear_outputs, inputs=[], outputs=[result_wav, result_img, result_name])
     result_but.click(clicked, inputs=[seed_slide, type_radio, *minputs[0::2]], outputs=[result_wav, result_img, result_name])
-
 
     gr.Examples(examples=examples, fn=clicked,
                 inputs=[seed_slide, type_radio, *minputs[0::2]],
