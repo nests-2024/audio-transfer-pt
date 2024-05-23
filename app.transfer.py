@@ -4,7 +4,7 @@ import numpy as np
 from model import RandomCNN, run_transfer
 from utils import read_audio_spectrum, spectrum_to_audio, spectrum_to_figure
 
-NUM_INPUTS = 2
+NUM_INPUTS = 4
 
 examples = [
     ["wavs/voices/boy.wav",
@@ -39,26 +39,44 @@ def update_inputs(*minputs):
     return [*mouts]
 
 
-def clicked(*file_paths):
-    content_path = file_paths[0]
-    style_path = file_paths[1]
+def concatenate_audios(paths):
+    spectrum, p, sr = None, None, None
+    filename = ""
 
-    if content_path is None or style_path is None:
+    for path in paths:
+        m_slug = path.split("/")[-1].split(" ")[0].split(".")[0][:32].split("-0-")[0]
+        filename += m_slug + "-"
+
+        m_s, m_p, m_sr = read_audio_spectrum(path)
+
+        if spectrum is None:
+            spectrum, p, sr = m_s, m_p, m_sr
+        else:
+            spectrum = np.concatenate((spectrum, m_s), axis=1)
+            p = np.concatenate((p, m_p), axis=1)
+            sr = m_sr
+
+    return spectrum, p, sr, filename[:-1]
+
+
+def clicked(*file_paths):
+    content_paths = [p for p in file_paths[:NUM_INPUTS//2] if p is not None]
+    style_paths = [p for p in file_paths[NUM_INPUTS//2:] if p is not None]
+
+    if len(content_paths) < 1 or len(style_paths) < 1:
         return [gr.Audio(), gr.Image(), gr.Textbox()]
 
-    content_s, content_p, content_sr= read_audio_spectrum(content_path)
-    style_s, style_p, style_sr = read_audio_spectrum(style_path)
+    content_s, content_p, content_sr, content_slug = concatenate_audios(content_paths)
+    style_s, style_p, style_sr, style_slug = concatenate_audios(style_paths)
 
-    kx, ky = 21, 21
+    kx, ky = 31, 21
     mcnn = RandomCNN(out_channels=768, kernel=(kx, ky), stride=(kx - 2, ky - 2))
-    result = run_transfer(mcnn, content_s, style_s, num_steps=1000, content_weight=1, style_weight=1e11)
+    result = run_transfer(mcnn, content_s, style_s, num_steps=1500, content_weight=1, style_weight=1e12)
 
     result_spectrum = result.cpu().data.numpy().squeeze()
     result_img = spectrum_to_figure(result_spectrum)
     result_wav = spectrum_to_audio(result_spectrum, p=content_p, rounds=150)
 
-    content_slug = content_path.split("/")[-1].split(" ")[0].split(".")[0][:32].split("-0-")[0]
-    style_slug = style_path.split("/")[-1].split(" ")[0].split(".")[0][:32].split("-0-")[0]
     filename = f"c-{content_slug}_s-{style_slug}.wav"
 
     return [
@@ -78,7 +96,7 @@ with gr.Blocks(analytics_enabled=False) as demo:
     minputs = []
     for i in range(NUM_INPUTS):
         with gr.Row():
-            mlabel = "Content" if len(minputs) < 1 else "Style"
+            mlabel = "Content" if i < NUM_INPUTS//2 else "Style"
             ma = gr.Audio(sources=["upload"], type="filepath", label=mlabel, visible=True)
             mi = gr.Image(visible=True, interactive=False, height=200)
             minputs.append(ma)
